@@ -1,22 +1,26 @@
 require("dotenv").config();
+const express = require("express");
 const mongoose = require("mongoose");
-
 
 console.log("🔥🔥🔥 BACKEND FILE CONFIRMED RUNNING 🔥🔥🔥");
 
-const express = require("express");
 const taskRoutes = require("./routes/taskRoutes");
+
 const app = express();
 const PORT = 5000;
 
 // middleware
 app.use(express.json());
 
-// root test route (keep this)
+// routes
+app.use("/tasks", taskRoutes);
+
+// root test route
 app.get("/", (req, res) => {
   res.send("ROOT ROUTE WORKING");
 });
 
+// database connection
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
@@ -26,11 +30,7 @@ mongoose
     console.error("❌ MongoDB connection failed:", err);
   });
 
-
-// 🔥 PHASE 2 ROUTES
-app.use("/api/tasks", taskRoutes);
-
-// start server (ALWAYS LAST)
+// start server
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
 });
