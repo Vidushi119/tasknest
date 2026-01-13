@@ -3,9 +3,10 @@ const Task = require("../models/Task");
 // CREATE a new task
 exports.createTask = async (req, res) => {
   try {
-    if (!req.body.title) {
-      return res.status(400).json({ message: "Title is required" });
-    }
+    if (!req.body || !req.body.title) {
+  return res.status(400).json({ message: "Title is required" });
+}
+
 
     const task = await Task.create({
       title: req.body.title
