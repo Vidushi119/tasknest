@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
+const cors = require("cors");
 
 console.log("🔥🔥🔥 BACKEND FILE CONFIRMED RUNNING 🔥🔥🔥");
 
@@ -10,6 +11,7 @@ const app = express();
 const PORT = 5000;
 
 // middleware
+app.use(cors());            // ✅ allow frontend requests
 app.use(express.json());
 
 // routes
