@@ -1,4 +1,6 @@
 require("dotenv").config();
+const { errorHandler } = require("./middleware/errorMiddleware");
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -36,3 +38,4 @@ mongoose
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
 });
+app.use(errorHandler);
