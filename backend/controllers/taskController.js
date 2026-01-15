@@ -85,5 +85,5 @@ module.exports = {
   createTask,
   updateTask,
   deleteTask,
-  getTaskStats,
+  getTaskStats, //Task Statistics feature
 };
