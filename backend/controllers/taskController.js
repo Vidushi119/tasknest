@@ -1,66 +1,89 @@
 const Task = require("../models/Task");
+const asyncHandler = require("../middleware/asyncHandler");
 
-// CREATE a new task
-exports.createTask = async (req, res) => {
-  try {
-    if (!req.body || !req.body.title) {
-      return res.status(400).json({ message: "Title is required" });
-    }
+/**
+ * @desc    Get all tasks
+ * @route   GET /tasks
+ */
+const getTasks = asyncHandler(async (req, res) => {
+  const tasks = await Task.find().sort({ createdAt: -1 });
+  res.status(200).json(tasks);
+});
 
-    const task = await Task.create({
-      title: req.body.title
-    });
+/**
+ * @desc    Create new task
+ * @route   POST /tasks
+ */
+const createTask = asyncHandler(async (req, res) => {
+  const { title } = req.body;
 
-    res.status(201).json(task);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  if (!title) {
+    res.status(400);
+    throw new Error("Task title is required");
   }
-};
 
-// GET all tasks
-exports.getTasks = async (req, res) => {
-  try {
-    const tasks = await Task.find().sort({ createdAt: -1 });
-    res.status(200).json(tasks);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  const task = await Task.create({
+    title,
+    completed: false,
+  });
+
+  res.status(201).json(task);
+});
+
+/**
+ * @desc    Update task
+ * @route   PUT /tasks/:id
+ */
+const updateTask = asyncHandler(async (req, res) => {
+  const task = await Task.findById(req.params.id);
+
+  if (!task) {
+    res.status(404);
+    throw new Error("Task not found");
   }
-};
 
-// UPDATE a task
-exports.updateTask = async (req, res) => {
-  try {
-    const taskId = req.params.id;
-    const updates = req.body;
+  task.title = req.body.title ?? task.title;
+  task.completed = req.body.completed ?? task.completed;
 
-    const updatedTask = await Task.findByIdAndUpdate(taskId, updates, {
-      new: true,
-      runValidators: true,
-    });
+  const updatedTask = await task.save();
+  res.status(200).json(updatedTask);
+});
 
-    if (!updatedTask) {
-      return res.status(404).json({ message: "Task not found" });
-    }
+/**
+ * @desc    Delete task
+ * @route   DELETE /tasks/:id
+ */
+const deleteTask = asyncHandler(async (req, res) => {
+  const task = await Task.findById(req.params.id);
 
-    res.status(200).json(updatedTask);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  if (!task) {
+    res.status(404);
+    throw new Error("Task not found");
   }
-};
 
-// DELETE a task
-exports.deleteTask = async (req, res) => {
-  try {
-    const taskId = req.params.id;
+  await task.deleteOne();
+  res.status(200).json({ message: "Task deleted successfully" });
+});
 
-    const deletedTask = await Task.findByIdAndDelete(taskId);
+/**
+ * @desc    Get task statistics
+ * @route   GET /tasks/stats
+ */
+const getTaskStats = asyncHandler(async (req, res) => {
+  const total = await Task.countDocuments();
+  const completed = await Task.countDocuments({ completed: true });
 
-    if (!deletedTask) {
-      return res.status(404).json({ message: "Task not found" });
-    }
+  res.status(200).json({
+    total,
+    completed,
+    pending: total - completed,
+  });
+});
 
-    res.status(200).json({ message: "Task deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+module.exports = {
+  getTasks,
+  createTask,
+  updateTask,
+  deleteTask,
+  getTaskStats,
 };
