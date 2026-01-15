@@ -13,7 +13,7 @@ const app = express();
 const PORT = 5000;
 
 // middleware
-app.use(cors());            // ✅ allow frontend requests
+app.use(cors());
 app.use(express.json());
 
 // routes
@@ -23,6 +23,9 @@ app.use("/tasks", taskRoutes);
 app.get("/", (req, res) => {
   res.send("ROOT ROUTE WORKING");
 });
+
+// ❗ ERROR HANDLER — MUST BE AFTER ROUTES
+app.use(errorHandler);
 
 // database connection
 mongoose
@@ -38,4 +41,3 @@ mongoose
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
 });
-app.use(errorHandler);
