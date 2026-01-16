@@ -1,34 +1,55 @@
-// app.js
 document.addEventListener("DOMContentLoaded", () => {
-  const container = document.createElement("div");
-  container.style.padding = "20px";
-  container.style.border = "1px solid #ccc";
-  container.style.borderRadius = "8px";
+  loadStats();
+  loadTasks();
+});
 
-  const heading = document.createElement("h2");
-  heading.textContent = "Task Statistics";
-  container.appendChild(heading);
-
-  const totalEl = document.createElement("p");
-  const completedEl = document.createElement("p");
-  const pendingEl = document.createElement("p");
-
-  container.appendChild(totalEl);
-  container.appendChild(completedEl);
-  container.appendChild(pendingEl);
-
-  document.body.appendChild(container);
-
-  // Fetch stats from backend
+// ---------- TASK STATS ----------
+function loadStats() {
   fetch("http://localhost:5000/tasks/stats")
     .then((res) => res.json())
     .then((data) => {
-      totalEl.textContent = `Total Tasks: ${data.total}`;
-      completedEl.textContent = `Completed Tasks: ${data.completed}`;
-      pendingEl.textContent = `Pending Tasks: ${data.pending}`;
+      document.getElementById("stats").innerHTML = `
+        <h2>Task Statistics</h2>
+        <p>Total Tasks: ${data.total}</p>
+        <p>Completed Tasks: ${data.completed}</p>
+        <p>Pending Tasks: ${data.pending}</p>
+      `;
+    })
+    .catch(() => {
+      document.getElementById("stats").innerText = "Error fetching stats";
+    });
+}
+
+// ---------- TASK LIST + FILTER ----------
+function loadTasks(status = "") {
+  let url = "http://localhost:5000/tasks";
+  if (status) {
+    url += `?status=${status}`;
+  }
+
+  fetch(url)
+    .then((res) => res.json())
+    .then((tasks) => {
+      const list = document.getElementById("taskList");
+
+      if (!tasks.length) {
+        list.innerHTML = "<p>No tasks found</p>";
+        return;
+      }
+
+      list.innerHTML = tasks
+        .map(
+          (task) => `
+          <div style="border:1px solid #ccc; padding:10px; margin:8px 0;">
+            <strong>${task.title}</strong><br/>
+            Status: ${task.completed ? "Completed" : "Pending"}
+          </div>
+        `
+        )
+        .join("");
     })
     .catch((err) => {
-      totalEl.textContent = "Error fetching stats";
-      console.error(err);
+      console.error("Error fetching tasks:", err);
     });
-});
+}
+
