@@ -2,11 +2,21 @@ const Task = require("../models/Task");
 const asyncHandler = require("../middleware/asyncHandler");
 
 /**
- * @desc    Get all tasks
+ * @desc    Get all tasks (with optional filtering)
  * @route   GET /tasks
+ * @query   status=completed | pending
  */
 const getTasks = asyncHandler(async (req, res) => {
-  const tasks = await Task.find().sort({ createdAt: -1 });
+  const { status } = req.query;
+
+  let filter = {};
+  if (status === "completed") {
+    filter.completed = true;
+  } else if (status === "pending") {
+    filter.completed = false;
+  }
+
+  const tasks = await Task.find(filter).sort({ createdAt: -1 });
   res.status(200).json(tasks);
 });
 
@@ -72,12 +82,9 @@ const deleteTask = asyncHandler(async (req, res) => {
 const getTaskStats = asyncHandler(async (req, res) => {
   const total = await Task.countDocuments();
   const completed = await Task.countDocuments({ completed: true });
+  const pending = total - completed;
 
-  res.status(200).json({
-    total,
-    completed,
-    pending: total - completed,
-  });
+  res.status(200).json({ total, completed, pending });
 });
 
 module.exports = {
@@ -85,5 +92,5 @@ module.exports = {
   createTask,
   updateTask,
   deleteTask,
-  getTaskStats, //Task Statistics feature
+  getTaskStats,
 };
