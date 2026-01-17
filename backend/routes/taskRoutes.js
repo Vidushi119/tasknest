@@ -6,17 +6,17 @@ const {
   createTask,
   updateTask,
   deleteTask,
-  getTaskStats,  //tast statistics feature
 } = require("../controllers/taskController");
 
-// IMPORTANT: specific routes first
-router.get("/stats", getTaskStats);
+const { protect } = require("../middleware/authMiddleware");
 
-// CRUD routes
-router.get("/", getTasks);
-router.post("/", createTask);
-router.put("/:id", updateTask);
-router.delete("/:id", deleteTask);
+// all task routes are protected
+router.route("/")
+  .get(protect, getTasks)
+  .post(protect, createTask);
 
+router.route("/:id")
+  .put(protect, updateTask)
+  .delete(protect, deleteTask);
 
 module.exports = router;
