@@ -2,27 +2,21 @@ const Task = require("../models/Task");
 const asyncHandler = require("../middleware/asyncHandler");
 
 /**
- * @desc    Get all tasks (with optional filtering)
+ * @desc    Get logged-in user's tasks
  * @route   GET /tasks
- * @query   status=completed | pending
+ * @access  Private
  */
 const getTasks = asyncHandler(async (req, res) => {
-  const { status } = req.query;
-
-  let filter = {};
-  if (status === "completed") {
-    filter.completed = true;
-  } else if (status === "pending") {
-    filter.completed = false;
-  }
-
-  const tasks = await Task.find(filter).sort({ createdAt: -1 });
+  const tasks = await Task.find({ user: req.user._id }).sort({
+    createdAt: -1,
+  });
   res.status(200).json(tasks);
 });
 
 /**
  * @desc    Create new task
  * @route   POST /tasks
+ * @access  Private
  */
 const createTask = asyncHandler(async (req, res) => {
   const { title } = req.body;
@@ -34,7 +28,7 @@ const createTask = asyncHandler(async (req, res) => {
 
   const task = await Task.create({
     title,
-    completed: false,
+    user: req.user._id,
   });
 
   res.status(201).json(task);
@@ -43,6 +37,7 @@ const createTask = asyncHandler(async (req, res) => {
 /**
  * @desc    Update task
  * @route   PUT /tasks/:id
+ * @access  Private
  */
 const updateTask = asyncHandler(async (req, res) => {
   const task = await Task.findById(req.params.id);
@@ -50,6 +45,12 @@ const updateTask = asyncHandler(async (req, res) => {
   if (!task) {
     res.status(404);
     throw new Error("Task not found");
+  }
+
+  // ❗ Authorization check
+  if (task.user.toString() !== req.user._id.toString()) {
+    res.status(401);
+    throw new Error("Not authorized");
   }
 
   task.title = req.body.title ?? task.title;
@@ -62,6 +63,7 @@ const updateTask = asyncHandler(async (req, res) => {
 /**
  * @desc    Delete task
  * @route   DELETE /tasks/:id
+ * @access  Private
  */
 const deleteTask = asyncHandler(async (req, res) => {
   const task = await Task.findById(req.params.id);
@@ -71,20 +73,14 @@ const deleteTask = asyncHandler(async (req, res) => {
     throw new Error("Task not found");
   }
 
+  // ❗ Authorization check
+  if (task.user.toString() !== req.user._id.toString()) {
+    res.status(401);
+    throw new Error("Not authorized");
+  }
+
   await task.deleteOne();
   res.status(200).json({ message: "Task deleted successfully" });
-});
-
-/**
- * @desc    Get task statistics
- * @route   GET /tasks/stats
- */
-const getTaskStats = asyncHandler(async (req, res) => {
-  const total = await Task.countDocuments();
-  const completed = await Task.countDocuments({ completed: true });
-  const pending = total - completed;
-
-  res.status(200).json({ total, completed, pending });
 });
 
 module.exports = {
@@ -92,5 +88,4 @@ module.exports = {
   createTask,
   updateTask,
   deleteTask,
-  getTaskStats,
 };
