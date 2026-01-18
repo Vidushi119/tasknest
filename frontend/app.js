@@ -1,55 +1,120 @@
-document.addEventListener("DOMContentLoaded", () => {
-  loadStats();
-  loadTasks();
-});
+const API_URL = "http://localhost:5000";
 
-// ---------- TASK STATS ----------
-function loadStats() {
-  fetch("http://localhost:5000/tasks/stats")
-    .then((res) => res.json())
-    .then((data) => {
-      document.getElementById("stats").innerHTML = `
-        <h2>Task Statistics</h2>
-        <p>Total Tasks: ${data.total}</p>
-        <p>Completed Tasks: ${data.completed}</p>
-        <p>Pending Tasks: ${data.pending}</p>
-      `;
-    })
-    .catch(() => {
-      document.getElementById("stats").innerText = "Error fetching stats";
-    });
+/* ---------------- TOKEN HELPERS ---------------- */
+function getToken() {
+  return localStorage.getItem("token");
 }
 
-// ---------- TASK LIST + FILTER ----------
-function loadTasks(status = "") {
-  let url = "http://localhost:5000/tasks";
-  if (status) {
-    url += `?status=${status}`;
+/* ---------------- ELEMENTS ---------------- */
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const message = document.getElementById("message");
+const taskSection = document.getElementById("taskList");
+const addTaskBtn = document.getElementById("addTaskBtn");
+
+/* ---------------- AUTH GUARD ---------------- */
+function checkAuth() {
+  const token = getToken();
+
+  if (token) {
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "block";
+    fetchTasks();
+  } else {
+    loginBtn.style.display = "block";
+    logoutBtn.style.display = "none";
+    taskSection.innerHTML = "";
+  }
+}
+
+/* ---------------- LOGIN ---------------- */
+loginBtn.addEventListener("click", login);
+
+async function login() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  message.innerText = "Logging in...";
+
+  try {
+    const res = await fetch(`${API_URL}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Login failed");
+
+    localStorage.setItem("token", data.token);
+    message.innerText = "Login successful ✅";
+
+    checkAuth();
+  } catch (err) {
+    message.innerText = err.message;
+  }
+}
+
+/* ---------------- LOGOUT ---------------- */
+logoutBtn.addEventListener("click", logout);
+
+function logout() {
+  localStorage.removeItem("token");
+  message.innerText = "Logged out 👋";
+  checkAuth();
+}
+
+/* ---------------- FETCH TASKS ---------------- */
+async function fetchTasks() {
+  const token = getToken();
+  if (!token) return;
+
+  const res = await fetch(`${API_URL}/tasks`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const tasks = await res.json();
+  renderTasks(tasks);
+}
+
+/* ---------------- ADD TASK ---------------- */
+addTaskBtn.addEventListener("click", addTask);
+
+async function addTask() {
+  const token = getToken();
+  if (!token) {
+    alert("Please login first");
+    return;
   }
 
-  fetch(url)
-    .then((res) => res.json())
-    .then((tasks) => {
-      const list = document.getElementById("taskList");
+  const title = document.getElementById("taskInput").value;
+  if (!title) return;
 
-      if (!tasks.length) {
-        list.innerHTML = "<p>No tasks found</p>";
-        return;
-      }
+  await fetch(`${API_URL}/tasks`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ title }),
+  });
 
-      list.innerHTML = tasks
-        .map(
-          (task) => `
-          <div style="border:1px solid #ccc; padding:10px; margin:8px 0;">
-            <strong>${task.title}</strong><br/>
-            Status: ${task.completed ? "Completed" : "Pending"}
-          </div>
-        `
-        )
-        .join("");
-    })
-    .catch((err) => {
-      console.error("Error fetching tasks:", err);
-    });
+  document.getElementById("taskInput").value = "";
+  fetchTasks();
 }
 
+/* ---------------- RENDER ---------------- */
+function renderTasks(tasks) {
+  taskSection.innerHTML = "";
+
+  tasks.forEach((task) => {
+    const li = document.createElement("li");
+    li.innerText = task.title;
+    taskSection.appendChild(li);
+  });
+}
+
+/* ---------------- AUTO CHECK ON LOAD ---------------- */
+checkAuth();

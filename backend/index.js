@@ -1,61 +1,40 @@
 require("dotenv").config();
-const { errorHandler } = require("./middleware/errorMiddleware");
-
-const authRoutes = require("./routes/authRoutes");
-
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 
-console.log("🔥🔥🔥 BACKEND FILE CONFIRMED RUNNING 🔥🔥🔥");
-
+const authRoutes = require("./routes/authRoutes");
 const taskRoutes = require("./routes/taskRoutes");
+const { errorHandler } = require("./middleware/errorMiddleware");
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
-// middleware
+console.log("🚀 INDEX.JS LOADED");
+
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-// routes
+// Routes
+app.use("/auth", authRoutes);
 app.use("/tasks", taskRoutes);
 
-app.use("/auth", authRoutes);
-
-// root test route
+// Root route
 app.get("/", (req, res) => {
-  res.send("ROOT ROUTE WORKING");
+  res.send("API is running...");
 });
 
-// This is temporary, only for testing.
-const { protect } = require("./middleware/authMiddleware");
-
-app.get("/protected-test", protect, (req, res) => {
-  res.json({
-    message: "Access granted",
-    user: req.user,
-  });
-});
-//till here
-
-
-// ❗ ERROR HANDLER — MUST BE AFTER ROUTES
+// Error handler (ALWAYS LAST)
 app.use(errorHandler);
 
-// database connection
+// DB connection
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("✅ MongoDB connected successfully");
-  })
-  .catch((err) => {
-    console.error("❌ MongoDB connection failed:", err);
-  });
+  .then(() => console.log("✅ MongoDB connected successfully"))
+  .catch((err) => console.error("❌ MongoDB connection failed:", err));
 
-
-
-// start server
+// Start server
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
 });

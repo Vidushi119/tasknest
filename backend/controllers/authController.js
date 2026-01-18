@@ -1,50 +1,51 @@
 const User = require("../models/User");
-const asyncHandler = require("../middleware/asyncHandler");
 const generateToken = require("../utils/generateToken");
 
-/**
- * @desc    Register new user
- * @route   POST /auth/register
- */
-const registerUser = asyncHandler(async (req, res) => {
+// @desc    Register user
+// @route   POST /auth/register
+// @access  Public
+const registerUser = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
     res.status(400);
-    throw new Error("Email and password are required");
+    throw new Error("Please provide all fields");
   }
 
   const userExists = await User.findOne({ email });
+
   if (userExists) {
     res.status(400);
     throw new Error("User already exists");
   }
 
-  const user = await User.create({ email, password });
-
-  res.status(201).json({
-    _id: user._id,
-    email: user.email,
-    token: generateToken(user._id),
+  const user = await User.create({
+    email,
+    password,
   });
-});
 
-/**
- * @desc    Login user
- * @route   POST /auth/login
- */
-const loginUser = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
+  if (user) {
+    res.status(201).json({
+      _id: user._id,
+      email: user.email,
+      token: generateToken(user._id),
+    });
+  } else {
     res.status(400);
-    throw new Error("Email and password are required");
+    throw new Error("Invalid user data");
   }
+};
+
+// @desc    Login user
+// @route   POST /auth/login
+// @access  Public
+const loginUser = async (req, res) => {
+  const { email, password } = req.body;
 
   const user = await User.findOne({ email });
 
   if (user && (await user.matchPassword(password))) {
-    res.status(200).json({
+    res.json({
       _id: user._id,
       email: user.email,
       token: generateToken(user._id),
@@ -53,6 +54,9 @@ const loginUser = asyncHandler(async (req, res) => {
     res.status(401);
     throw new Error("Invalid email or password");
   }
-});
+};
 
-module.exports = { registerUser, loginUser };
+module.exports = {
+  registerUser,
+  loginUser,
+};

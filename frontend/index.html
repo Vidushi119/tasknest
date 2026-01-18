@@ -1,22 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>TaskNest</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 500px;
+      margin: 40px auto;
+    }
+    input, button {
+      padding: 8px;
+      margin: 5px 0;
+      width: 100%;
+    }
+    ul {
+      padding-left: 20px;
+    }
+  </style>
 </head>
 <body>
-  <h1>TaskNest Dashboard</h1>
+
+  <h2>Login</h2>
+
+  <input type="email" id="email" placeholder="Email" />
+  <input type="password" id="password" placeholder="Password" />
+
+  <button id="loginBtn">Login</button>
+  <button id="logoutBtn" style="display:none;">Logout</button>
+
+  <p id="message"></p>
+
+  <hr />
+
+  <h3>Add Task</h3>
+  <input type="text" id="taskInput" placeholder="Enter task title" />
+  <button id="addTaskBtn">Add Task</button>
+
+  <h3>Your Tasks</h3>
+  <ul id="taskList"></ul>
+
   <script src="app.js"></script>
-  <div id="stats"></div>
-
-<div id="filters" style="margin: 20px 0;">
-  <button onclick="loadTasks()">All</button>
-  <button onclick="loadTasks('completed')">Completed</button>
-  <button onclick="loadTasks('pending')">Pending</button>
-</div>
-
-<div id="taskList"></div>
-
 </body>
 </html>
