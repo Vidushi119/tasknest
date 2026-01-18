@@ -1,69 +1,11 @@
-// document.addEventListener("DOMContentLoaded", () => {
-//   loadStats();
-//   loadTasks();
-// });
-
-// // ---------- TASK STATS ----------
-// function loadStats() {
-//   fetch("http://localhost:5000/tasks/stats")
-//     .then((res) => res.json())
-//     .then((data) => {
-//       document.getElementById("stats").innerHTML = `
-//         <h2>Task Statistics</h2>
-//         <p>Total Tasks: ${data.total}</p>
-//         <p>Completed Tasks: ${data.completed}</p>
-//         <p>Pending Tasks: ${data.pending}</p>
-//       `;
-//     })
-//     .catch(() => {
-//       document.getElementById("stats").innerText = "Error fetching stats";
-//     });
-// }
-
-// // ---------- TASK LIST + FILTER ----------
-// function loadTasks(status = "") {
-//   let url = "http://localhost:5000/tasks";
-//   if (status) {
-//     url += `?status=${status}`;
-//   }
-
-//   fetch(url)
-//     .then((res) => res.json())
-//     .then((tasks) => {
-//       const list = document.getElementById("taskList");
-
-//       if (!tasks.length) {
-//         list.innerHTML = "<p>No tasks found</p>";
-//         return;
-//       }
-
-//       list.innerHTML = tasks
-//         .map(
-//           (task) => `
-//           <div style="border:1px solid #ccc; padding:10px; margin:8px 0;">
-//             <strong>${task.title}</strong><br/>
-//             Status: ${task.completed ? "Completed" : "Pending"}
-//           </div>
-//         `
-//         )
-//         .join("");
-//     })
-//     .catch((err) => {
-//       console.error("Error fetching tasks:", err);
-//     });
-// }
 const API_URL = "http://localhost:5000";
 
-/* =====================
-   TOKEN HELPERS
-===================== */
+/* ---------------- TOKEN HELPERS ---------------- */
 function getToken() {
   return localStorage.getItem("token");
 }
 
-/* =====================
-   LOGIN
-===================== */
+/* ---------------- LOGIN ---------------- */
 document.getElementById("loginBtn").addEventListener("click", login);
 
 async function login() {
@@ -76,24 +18,20 @@ async function login() {
   try {
     const res = await fetch(`${API_URL}/auth/login`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
 
     const data = await res.json();
 
-    if (!res.ok) {
-      throw new Error(data.message || "Login failed");
-    }
+    if (!res.ok) throw new Error(data.message || "Login failed");
 
-    // ✅ STORE TOKEN
+    // ✅ Save token
     localStorage.setItem("token", data.token);
 
     message.innerText = "Login successful ✅";
+    document.getElementById("logoutBtn").style.display = "block";
 
-    // Load tasks after login
     fetchTasks();
 
   } catch (err) {
@@ -101,16 +39,20 @@ async function login() {
   }
 }
 
-/* =====================
-   FETCH TASKS (PROTECTED)
-===================== */
+/* ---------------- LOGOUT ---------------- */
+document.getElementById("logoutBtn").addEventListener("click", logout);
+
+function logout() {
+  localStorage.removeItem("token");
+  document.getElementById("taskList").innerHTML = "";
+  document.getElementById("message").innerText = "Logged out successfully 👋";
+  document.getElementById("logoutBtn").style.display = "none";
+}
+
+/* ---------------- FETCH TASKS ---------------- */
 async function fetchTasks() {
   const token = getToken();
-
-  if (!token) {
-    alert("Please login first");
-    return;
-  }
+  if (!token) return;
 
   const res = await fetch(`${API_URL}/tasks`, {
     headers: {
@@ -122,16 +64,17 @@ async function fetchTasks() {
   renderTasks(tasks);
 }
 
-/* =====================
-   CREATE TASK (PROTECTED)
-===================== */
-async function createTask(title) {
-  const token = getToken();
+/* ---------------- ADD TASK ---------------- */
+document.getElementById("addTaskBtn").addEventListener("click", addTask);
 
+async function addTask() {
+  const token = getToken();
   if (!token) {
     alert("Please login first");
     return;
   }
+
+  const title = document.getElementById("taskInput").value;
 
   const res = await fetch(`${API_URL}/tasks`, {
     method: "POST",
@@ -143,18 +86,11 @@ async function createTask(title) {
   });
 
   const data = await res.json();
-
-  if (!res.ok) {
-    alert(data.message);
-    return;
-  }
-
+  document.getElementById("taskInput").value = "";
   fetchTasks();
 }
 
-/* =====================
-   RENDER TASKS
-===================== */
+/* ---------------- RENDER TASKS ---------------- */
 function renderTasks(tasks) {
   const list = document.getElementById("taskList");
   list.innerHTML = "";
@@ -165,18 +101,3 @@ function renderTasks(tasks) {
     list.appendChild(li);
   });
 }
-
-/* =====================
-   ADD TASK BUTTON
-===================== */
-document.getElementById("addTaskBtn")?.addEventListener("click", () => {
-  const input = document.getElementById("taskInput");
-  const title = input.value.trim();
-
-  if (!title) return;
-
-  createTask(title);
-  input.value = "";
-});
-
-

@@ -3,54 +3,40 @@
 <head>
   <meta charset="UTF-8" />
   <title>TaskNest</title>
-
   <style>
     body {
       font-family: Arial, sans-serif;
       max-width: 500px;
       margin: 40px auto;
     }
-
     input, button {
       padding: 8px;
-      margin: 6px 0;
+      margin: 5px 0;
       width: 100%;
     }
-
-    button {
-      cursor: pointer;
-    }
-
     ul {
       padding-left: 20px;
-    }
-
-    li {
-      margin: 6px 0;
     }
   </style>
 </head>
 <body>
 
-  <h1>TaskNest</h1>
+  <h2>Login</h2>
 
-  <!-- LOGIN SECTION -->
-  <h3>Login</h3>
   <input type="email" id="email" placeholder="Email" />
   <input type="password" id="password" placeholder="Password" />
+
   <button id="loginBtn">Login</button>
+  <button id="logoutBtn" style="display:none;">Logout</button>
+
   <p id="message"></p>
 
   <hr />
 
-  <!-- ADD TASK SECTION -->
   <h3>Add Task</h3>
   <input type="text" id="taskInput" placeholder="Enter task title" />
   <button id="addTaskBtn">Add Task</button>
 
-  <hr />
-
-  <!-- TASK LIST -->
   <h3>Your Tasks</h3>
   <ul id="taskList"></ul>
 
