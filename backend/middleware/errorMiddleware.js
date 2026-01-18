@@ -4,9 +4,8 @@ const errorHandler = (err, req, res, next) => {
   res.status(statusCode).json({
     success: false,
     message: err.message,
-    stack: process.env.NODE_ENV === "production" ? null : err.stack,
+    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
   });
 };
 
 module.exports = { errorHandler };
-
